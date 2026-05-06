@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="FRITZConnect"/>
+<meta name="theme-color" content="#e6002d"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<title>FRITZConnect</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.4.0/dist/tabler-icons.min.css"/>
+<style>
+:root {
+  --red: #e6002d;
+  --red-dark: #b50022;
+  --blue: #007AFF;
+  --green: #34C759;
+  --orange: #FF9500;
+  --gray-6: #1c1c1e;
+  --gray-5: #3a3a3c;
+  --gray-4: #636366;
+  --gray-3: #8e8e93;
+  --gray-2: #c7c7cc;
+  --gray-1: #e5e5ea;
+  --gray-0: #f2f2f7;
+  --white: #ffffff;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font: 'DM Sans', -apple-system, sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--gray-0); color: var(--gray-6); }
+
+/* ── App shell ── */
+#app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Screens ── */
+.screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.screen.active { display: flex; }
+
+/* ── Nav bar ── */
+.nav { background: rgba(242,242,247,0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 0.5px solid rgba(0,0,0,0.14); padding: calc(var(--safe-top) + 10px) 16px 10px; display: flex; align-items: center; gap: 8px; min-height: 52px; flex-shrink: 0; }
+.nav-title { font-size: 17px; font-weight: 600; color: var(--gray-6); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav-btn { background: none; border: none; color: var(--blue); font-size: 15px; font-family: var(--font); font-weight: 500; cursor: pointer; padding: 4px 2px; display: flex; align-items: center; gap: 3px; white-space: nowrap; flex-shrink: 0; }
+.nav-btn i { font-size: 22px; }
+.nav-btn.red { color: var(--red); }
+
+/* ── Scrollable content ── */
+.content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: calc(64px + var(--safe-bottom)); }
+
+/* ── Section header ── */
+.sec { font-size: 12px; font-weight: 600; color: var(--gray-3); text-transform: uppercase; letter-spacing: 0.6px; padding: 16px 20px 5px; }
+
+/* ── List group ── */
+.group { background: var(--white); margin: 0 16px 10px; border-radius: var(--radius-md); overflow: hidden; border: 0.5px solid rgba(0,0,0,0.06); }
+.row { display: flex; align-items: center; padding: 11px 14px; gap: 12px; border-bottom: 0.5px solid rgba(0,0,0,0.07); cursor: pointer; transition: background 0.1s; position: relative; -webkit-user-select: none; user-select: none; }
+.row:last-child { border-bottom: none; }
+.row:active { background: var(--gray-0); }
+.row.selected { background: #e8f3ff; }
+
+/* ── Item icon ── */
+.icon { width: 38px; height: 38px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.i-folder { background: #FFD60A; color: #6b5500; }
+.i-img    { background: #34C759; color: #fff; }
+.i-vid    { background: #FF3B30; color: #fff; }
+.i-pdf    { background: #FF9500; color: #fff; }
+.i-doc    { background: #007AFF; color: #fff; }
+.i-zip    { background: #636366; color: #fff; }
+.i-file   { background: #8e8e93; color: #fff; }
+
+.row-thumb { width: 38px; height: 38px; border-radius: 9px; object-fit: cover; flex-shrink: 0; background: var(--gray-1); }
+.row-info { flex: 1; min-width: 0; }
+.row-name { font-size: 15px; font-weight: 500; color: var(--gray-6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-meta { font-size: 12px; color: var(--gray-3); margin-top: 1px; }
+.row-chev { color: var(--gray-2); font-size: 16px; flex-shrink: 0; }
+
+/* ── Checkbox (edit mode) ── */
+.chk { width: 24px; height: 24px; border-radius: 12px; border: 1.5px solid var(--gray-2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.chk.on { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* ── Photo grid ── */
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.photo-cell { aspect-ratio: 1; overflow: hidden; cursor: pointer; position: relative; background: var(--gray-1); }
+.photo-cell img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.3s; }
+.photo-cell .shimmer { position: absolute; inset: 0; background: linear-gradient(90deg, #e5e5ea 25%, #f5f5f5 50%, #e5e5ea 75%); background-size: 200%; animation: sh 1.3s infinite; }
+@keyframes sh { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.vid-badge { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.55); color: #fff; font-size: 10px; font-weight: 600; padding: 2px 5px; border-radius: 4px; display: flex; align-items: center; gap: 2px; }
+
+/* ── Tab bar ── */
+.tabbar { display: flex; background: rgba(242,242,247,0.94); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 0.5px solid rgba(0,0,0,0.14); padding: 6px 0 calc(6px + var(--safe-bottom)); flex-shrink: 0; }
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; border: none; background: none; color: var(--gray-3); font-family: var(--font); cursor: pointer; padding: 4px 0; }
+.tab.on { color: var(--blue); }
+.tab i { font-size: 24px; }
+.tab span { font-size: 10px; font-weight: 500; }
+
+/* ── Breadcrumb ── */
+.crumb { display: flex; align-items: center; gap: 4px; padding: 7px 16px; background: var(--white); border-bottom: 0.5px solid rgba(0,0,0,0.08); overflow-x: auto; flex-shrink: 0; }
+.crumb::-webkit-scrollbar { display: none; }
+.crumb-item { font-size: 13px; color: var(--blue); cursor: pointer; white-space: nowrap; }
+.crumb-item.cur { color: var(--gray-6); font-weight: 500; cursor: default; }
+.crumb-sep { color: var(--gray-2); font-size: 12px; }
+
+/* ── Connection badge ── */
+.conn { display: flex; align-items: center; gap: 7px; background: var(--white); border-radius: 10px; margin: 8px 16px 0; padding: 8px 14px; border: 0.5px solid rgba(0,0,0,0.08); flex-shrink: 0; }
+.conn-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.conn-txt { font-size: 12px; color: var(--gray-5); flex: 1; }
+
+/* ── Edit actions bar ── */
+.edit-bar-bottom { display: flex; gap: 8px; padding: 10px 14px calc(10px + var(--safe-bottom)); background: rgba(242,242,247,0.97); border-top: 0.5px solid rgba(0,0,0,0.12); flex-shrink: 0; }
+.act-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; background: var(--white); border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 10px 4px; cursor: pointer; font-family: var(--font); }
+.act-btn i { font-size: 20px; color: var(--blue); }
+.act-btn span { font-size: 11px; color: var(--gray-6); }
+.act-btn.del i { color: #FF3B30; }
+.act-btn.del span { color: #FF3B30; }
+
+/* ── LOGIN ── */
+#loginScreen { justify-content: center; align-items: center; padding: 32px 24px; gap: 18px; background: var(--gray-0); overflow-y: auto; }
+.logo-box { width: 80px; height: 80px; background: var(--red); border-radius: 20px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 0; }
+.logo-box span { color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; line-height: 1.3; text-align: center; }
+.login-title { font-size: 24px; font-weight: 600; color: var(--gray-6); }
+.login-sub { font-size: 14px; color: var(--gray-3); text-align: center; line-height: 1.6; }
+.field-group { background: var(--white); border-radius: var(--radius-md); overflow: hidden; width: 100%; border: 0.5px solid rgba(0,0,0,0.08); }
+.field { display: flex; align-items: center; padding: 13px 16px; gap: 12px; border-bottom: 0.5px solid rgba(0,0,0,0.08); }
+.field:last-child { border-bottom: none; }
+.field i { color: var(--gray-3); font-size: 20px; flex-shrink: 0; }
+.field input { border: none; outline: none; font-size: 15px; font-family: var(--font); flex: 1; color: var(--gray-6); background: transparent; min-width: 0; }
+.field input::placeholder { color: var(--gray-2); }
+.btn-primary { width: 100%; background: var(--red); color: #fff; border: none; border-radius: var(--radius-md); padding: 15px; font-size: 16px; font-weight: 600; font-family: var(--font); cursor: pointer; transition: background 0.15s; }
+.btn-primary:active { background: var(--red-dark); }
+.btn-primary:disabled { background: var(--gray-2); cursor: default; }
+.login-hint { font-size: 12px; color: var(--gray-3); text-align: center; }
+
+/* ── IMAGE VIEWER ── */
+#viewerScreen { background: #000; }
+#viewerScreen .nav { background: rgba(0,0,0,0.7); border-bottom-color: rgba(255,255,255,0.1); }
+#viewerScreen .nav-title { color: #fff; font-size: 15px; }
+#viewerScreen .nav-btn { color: #fff; }
+.viewer-area { flex: 1; display: flex; align-items: center; justify-content: center; padding: 12px; overflow: hidden; position: relative; }
+.viewer-area img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 4px; }
+.viewer-load { position: absolute; top: 0; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.15); }
+.viewer-load-fill { height: 100%; background: var(--blue); width: 0%; transition: width 0.35s; }
+.viewer-info { background: rgba(0,0,0,0.6); padding: 10px 16px; flex-shrink: 0; }
+.viewer-name { font-size: 14px; font-weight: 500; color: #fff; }
+.viewer-meta { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+.viewer-actions { background: rgba(0,0,0,0.6); padding: 10px 20px calc(10px + var(--safe-bottom)); display: flex; justify-content: space-around; flex-shrink: 0; }
+.vbtn { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #fff; border: none; background: none; cursor: pointer; font-family: var(--font); }
+.vbtn i { font-size: 24px; }
+.vbtn span { font-size: 11px; }
+
+/* ── BOTTOM SHEET ── */
+.sheet-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: flex-end; }
+.sheet-overlay.open { display: flex; }
+.sheet { background: var(--gray-0); border-radius: 20px 20px 0 0; width: 100%; padding: 0 0 calc(8px + var(--safe-bottom)); max-height: 85vh; overflow-y: auto; }
+.sheet-handle { width: 40px; height: 4px; background: rgba(0,0,0,0.18); border-radius: 2px; margin: 10px auto 14px; }
+.sheet-label { font-size: 13px; color: var(--gray-3); font-weight: 500; text-align: center; padding-bottom: 10px; border-bottom: 0.5px solid rgba(0,0,0,0.1); margin: 0 16px; }
+.sheet-item { display: flex; align-items: center; gap: 16px; padding: 14px 20px; font-size: 16px; font-family: var(--font); color: var(--gray-6); cursor: pointer; border-bottom: 0.5px solid rgba(0,0,0,0.06); background: none; border-left: none; border-right: none; width: 100%; text-align: left; }
+.sheet-item:hover { background: rgba(0,0,0,0.04); }
+.sheet-item i { font-size: 22px; color: var(--blue); width: 24px; }
+.sheet-item.red { color: #FF3B30; }
+.sheet-item.red i { color: #FF3B30; }
+.sheet-cancel { margin: 8px 16px 0; background: var(--white); border-radius: var(--radius-md); text-align: center; padding: 15px; font-size: 16px; font-weight: 600; color: var(--blue); cursor: pointer; border: none; width: calc(100% - 32px); font-family: var(--font); display: block; }
+
+/* ── MODAL ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 300; display: none; align-items: center; justify-content: center; padding: 24px; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--white); border-radius: 14px; width: 100%; max-width: 300px; overflow: hidden; }
+.modal-title { font-size: 17px; font-weight: 600; color: var(--gray-6); text-align: center; padding: 18px 16px 4px; }
+.modal-sub { font-size: 13px; color: var(--gray-3); text-align: center; padding: 0 16px 14px; }
+.modal input { border: none; border-top: 0.5px solid rgba(0,0,0,0.12); border-bottom: 0.5px solid rgba(0,0,0,0.12); width: 100%; padding: 13px 16px; font-size: 16px; font-family: var(--font); outline: none; color: var(--gray-6); }
+.modal-row { display: flex; border-top: 0.5px solid rgba(0,0,0,0.12); }
+.modal-btn { flex: 1; padding: 14px; font-size: 17px; font-family: var(--font); border: none; background: none; cursor: pointer; }
+.modal-btn.c { color: var(--gray-3); border-right: 0.5px solid rgba(0,0,0,0.12); }
+.modal-btn.ok { color: var(--blue); font-weight: 600; }
+
+/* ── Move picker ── */
+.move-list { max-height: 50vh; overflow-y: auto; }
+.move-item { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 0.5px solid rgba(0,0,0,0.07); cursor: pointer; background: var(--white); }
+.move-item:hover { background: var(--gray-0); }
+.move-item.sel { background: #e8f3ff; }
+.move-item i { font-size: 24px; color: #FFD60A; flex-shrink: 0; }
+.move-item span { font-size: 15px; font-weight: 500; color: var(--gray-6); flex: 1; }
+.move-item .chk-icon { font-size: 18px; color: var(--blue); margin-left: auto; }
+
+/* ── Upload progress ── */
+.upload-modal { background: var(--white); border-radius: 16px; width: 260px; padding: 24px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.upload-modal i { font-size: 48px; color: var(--blue); }
+.upload-modal .fname { font-size: 15px; font-weight: 500; color: var(--gray-6); word-break: break-all; }
+.prog-bg { width: 100%; height: 6px; background: var(--gray-1); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--blue); border-radius: 3px; transition: width 0.35s; }
+.upload-modal .plabel { font-size: 13px; color: var(--gray-3); }
+
+/* ── Toast ── */
+#toast { position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%; transform: translateX(-50%); background: rgba(30,30,30,0.88); color: #fff; font-size: 13px; font-weight: 500; padding: 9px 18px; border-radius: 20px; white-space: nowrap; z-index: 500; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+#toast.show { opacity: 1; }
+
+/* ── Pill tabs ── */
+.pills { display: flex; margin: 10px 16px 2px; background: rgba(118,118,128,0.12); border-radius: 9px; padding: 2px; gap: 2px; flex-shrink: 0; }
+.pill { flex: 1; border: none; background: none; padding: 7px; border-radius: 7px; font-size: 13px; font-weight: 500; color: var(--gray-3); cursor: pointer; font-family: var(--font); }
+.pill.on { background: var(--white); color: var(--gray-6); }
+
+/* ── Error banner ── */
+.error-banner { background: #fff0f0; border: 0.5px solid rgba(230,0,45,0.2); border-radius: var(--radius-sm); margin: 8px 16px; padding: 10px 14px; font-size: 13px; color: #c0001f; display: none; }
+.error-banner.show { display: block; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ══════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════ -->
+<div id="loginScreen" class="screen active">
+  <div class="logo-box"><span>FRITZ!</span><span>NAS</span></div>
+  <div class="login-title">FRITZConnect</div>
+  <div class="login-sub">Verbinde dich mit deiner FRITZ!Box über MyFRITZ! oder im Heimnetz</div>
+  <div class="field-group" style="width:100%">
+    <div class="field"><i class="ti ti-server"></i><input id="inHost" type="url" inputmode="url" placeholder="abc123.myfritz.net oder fritz.box" autocapitalize="none" autocorrect="off" spellcheck="false"/></div>
+    <div class="field"><i class="ti ti-user"></i><input id="inUser" type="text" placeholder="Benutzername" autocapitalize="none" autocorrect="off" spellcheck="false"/></div>
+    <div class="field"><i class="ti ti-lock"></i><input id="inPass" type="password" placeholder="Passwort"/></div>
+  </div>
+  <div class="error-banner" id="loginError"></div>
+  <button class="btn-primary" id="loginBtn" onclick="doLogin()">Verbinden</button>
+  <div class="login-hint">Verbindung läuft über HTTPS · Passwort wird nur lokal gespeichert</div>
+</div>
+
+<!-- ══════════════════════════════
+     FILES SCREEN
+══════════════════════════════ -->
+<div id="filesScreen" class="screen">
+  <!-- Normal nav -->
+  <div class="nav" id="navNormal">
+    <i class="ti ti-server" style="font-size:22px;color:var(--red);flex-shrink:0"></i>
+    <span class="nav-title" id="navTitle">FRITZ!NAS</span>
+    <button class="nav-btn" onclick="startEdit()">Auswählen</button>
+    <button class="nav-btn" onclick="openNewFolderModal()" title="Neuer Ordner"><i class="ti ti-folder-plus"></i></button>
+    <button class="nav-btn" onclick="triggerUpload()" title="Hochladen"><i class="ti ti-upload"></i></button>
+  </div>
+  <!-- Edit nav -->
+  <div class="nav" id="navEdit" style="display:none">
+    <button class="nav-btn" onclick="cancelEdit()">Abbrechen</button>
+    <span class="nav-title" id="editCount" style="text-align:center">0 ausgewählt</span>
+    <button class="nav-btn" onclick="selectAll()">Alle</button>
+  </div>
+  <!-- Connection badge -->
+  <div class="conn" id="connBadge">
+    <div class="conn-dot"></div>
+    <span class="conn-txt" id="connTxt">Verbunden</span>
+  </div>
+  <!-- Breadcrumb -->
+  <div class="crumb" id="breadcrumb"></div>
+  <!-- Tab pills -->
+  <div class="pills">
+    <button class="pill on" onclick="switchPill(this,'all')">Alle</button>
+    <button class="pill" onclick="switchPill(this,'photos')">Fotos</button>
+    <button class="pill" onclick="switchPill(this,'docs')">Dokumente</button>
+    <button class="pill" onclick="switchPill(this,'other')">Sonstiges</button>
+  </div>
+  <!-- File list -->
+  <div class="content" id="fileList"></div>
+  <!-- Edit actions -->
+  <div class="edit-bar-bottom" id="editActions" style="display:none">
+    <button class="act-btn" onclick="moveSelected()"><i class="ti ti-folder-symlink"></i><span>Verschieben</span></button>
+    <button class="act-btn" onclick="copySelected()"><i class="ti ti-copy"></i><span>Kopieren</span></button>
+    <button class="act-btn" onclick="renamePrompt()"><i class="ti ti-pencil"></i><span>Umbenennen</span></button>
+    <button class="act-btn del" onclick="deleteSelected()"><i class="ti ti-trash"></i><span>Löschen</span></button>
+  </div>
+  <!-- Tab bar -->
+  <div class="tabbar" id="tabbarMain">
+    <button class="tab on" onclick="tabClick('files',this)"><i class="ti ti-folder"></i><span>Dateien</span></button>
+    <button class="tab" onclick="tabClick('recents',this)"><i class="ti ti-clock"></i><span>Zuletzt</span></button>
+    <button class="tab" onclick="tabClick('info',this)"><i class="ti ti-server"></i><span>NAS-Info</span></button>
+    <button class="tab" onclick="tabClick('settings',this)"><i class="ti ti-settings"></i><span>Einstellungen</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     IMAGE VIEWER SCREEN
+══════════════════════════════ -->
+<div id="viewerScreen" class="screen">
+  <div class="nav">
+    <button class="nav-btn" onclick="closeViewer()"><i class="ti ti-chevron-left"></i> Zurück</button>
+    <span class="nav-title" id="viewerTitle"></span>
+    <button class="nav-btn" onclick="openItemSheet(viewerItem)"><i class="ti ti-dots-vertical"></i></button>
+  </div>
+  <div class="viewer-area">
+    <div class="viewer-load"><div class="viewer-load-fill" id="viewLoadBar"></div></div>
+    <img id="viewerImg" src="" alt="Vorschau"/>
+  </div>
+  <div class="viewer-info">
+    <div class="viewer-name" id="viewerName"></div>
+    <div class="viewer-meta" id="viewerMeta"></div>
+  </div>
+  <div class="viewer-actions">
+    <button class="vbtn" onclick="downloadItem(viewerItem)"><i class="ti ti-download"></i><span>Laden</span></button>
+    <button class="vbtn" onclick="shareItem(viewerItem)"><i class="ti ti-share"></i><span>Teilen</span></button>
+    <button class="vbtn" onclick="openItemSheet(viewerItem)"><i class="ti ti-dots"></i><span>Mehr</span></button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     CONTEXT SHEET
+══════════════════════════════ -->
+<div class="sheet-overlay" id="ctxSheet" onclick="closeSheet('ctxSheet')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-label" id="ctxLabel">Optionen</div>
+    <button class="sheet-item" onclick="doRename()"><i class="ti ti-pencil"></i>Umbenennen</button>
+    <button class="sheet-item" onclick="doMoveSingle()"><i class="ti ti-folder-symlink"></i>Verschieben</button>
+    <button class="sheet-item" onclick="doShare()"><i class="ti ti-share"></i>Teilen</button>
+    <button class="sheet-item" onclick="doDownload()"><i class="ti ti-download"></i>Herunterladen</button>
+    <button class="sheet-item red" onclick="doDeleteSingle()"><i class="ti ti-trash"></i>Löschen</button>
+    <button class="sheet-cancel" onclick="closeSheet('ctxSheet')">Abbrechen</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     NEW FOLDER MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="folderModal">
+  <div class="modal">
+    <div class="modal-title">Neuer Ordner</div>
+    <div class="modal-sub">In: <span id="folderModalLoc">FRITZ!NAS</span></div>
+    <input id="folderNameInput" placeholder="Ordnername" maxlength="60" onkeydown="if(event.key==='Enter')createFolder()"/>
+    <div class="modal-row">
+      <button class="modal-btn c" onclick="closeModal('folderModal')">Abbrechen</button>
+      <button class="modal-btn ok" onclick="createFolder()">Erstellen</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     RENAME MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="renameModal">
+  <div class="modal">
+    <div class="modal-title">Umbenennen</div>
+    <div class="modal-sub">Neuen Namen eingeben</div>
+    <input id="renameInput" placeholder="Name" maxlength="60" onkeydown="if(event.key==='Enter')confirmRename()"/>
+    <div class="modal-row">
+      <button class="modal-btn c" onclick="closeModal('renameModal')">Abbrechen</button>
+      <button class="modal-btn ok" onclick="confirmRename()">Fertig</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     MOVE PICKER MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="moveModal">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-title">Verschieben nach</div>
+    <div class="modal-sub" id="moveSub"></div>
+    <div class="move-list" id="moveList"></div>
+    <div class="modal-row">
+      <button class="modal-btn c" onclick="closeModal('moveModal')">Abbrechen</button>
+      <button class="modal-btn ok" onclick="confirmMove()">Verschieben</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════
+     UPLOAD MODAL
+══════════════════════════════ -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="upload-modal">
+    <i class="ti ti-upload"></i>
+    <div class="fname" id="uploadName">Datei hochladen</div>
+    <div class="prog-bg"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <div class="plabel" id="uploadLabel">Vorbereiten...</div>
+  </div>
+</div>
+
+<!-- hidden file input -->
+<input type="file" id="fileInput" multiple style="display:none" onchange="handleFileSelect(event)"/>
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let creds = null;
+let navPath = [];       // aktueller Pfad als Array von Strings
+let editMode = false;
+let selected = new Set();
+let ctxItem = null;     // Ziel für Kontextmenü-Aktionen
+let viewerItem = null;  // aktuell geöffnetes Bild
+let moveTargets = [];   // Items die verschoben werden sollen
+let moveDest = null;    // Zielordner-Name oder '__up__'
+let currentPill = 'all';
+let allItems = [];      // gecachte Inhalte des aktuellen Ordners
+let toastTimer = null;
+
+// ════════════════════════════════════════════════
+// CREDENTIALS & LOGIN
+// ════════════════════════════════════════════════
+function loadCreds() {
+  try {
+    const s = localStorage.getItem('fritz_creds');
+    if (s) creds = JSON.parse(s);
+  } catch(e) {}
+}
+
+function saveCreds(c) {
+  creds = c;
+  localStorage.setItem('fritz_creds', JSON.stringify(c));
+}
+
+function clearCreds() {
+  creds = null;
+  localStorage.removeItem('fritz_creds');
+}
+
+function baseURL() {
+  const host = creds.host.replace(/\/$/, '');
+  const proto = host.includes('fritz.box') ? 'http' : 'https';
+  return `${proto}://${host}/nas`;
+}
+
+function authHeader() {
+  return 'Basic ' + btoa(unescape(encodeURIComponent(creds.user + ':' + creds.pass)));
+}
+
+async function doLogin() {
+  const host = document.getElementById('inHost').value.trim();
+  const user = document.getElementById('inUser').value.trim();
+  const pass = document.getElementById('inPass').value;
+  if (!host || !user || !pass) { showError('Bitte alle Felder ausfüllen.'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verbinde...';
+  hideError();
+
+  const testCreds = { host, user, pass };
+  creds = testCreds;
+
+  try {
+    await webdavList('/');
+    saveCreds(testCreds);
+    document.getElementById('connTxt').textContent = host + ' · HTTPS';
+    showScreen('filesScreen');
+    navPath = [];
+    await loadDir();
+  } catch(e) {
+    creds = null;
+    showError(friendlyError(e));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verbinden';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function hideError() { document.getElementById('loginError').classList.remove('show'); }
+
+function friendlyError(e) {
+  if (!e) return 'Unbekannter Fehler.';
+  const m = e.message || '';
+  if (m.includes('401') || m.includes('403')) return 'Falscher Benutzername oder Passwort.';
+  if (m.includes('404')) return 'NAS nicht gefunden. Ist USB-Speicher angeschlossen?';
+  if (m.includes('Failed to fetch') || m.includes('NetworkError')) return 'Keine Verbindung zur FRITZ!Box. Bist du im Heimnetz oder via MyFRITZ!?';
+  return 'Fehler: ' + m;
+}
+
+// ════════════════════════════════════════════════
+// WEBDAV CORE
+// ════════════════════════════════════════════════
+function davURL(path) {
+  const p = path.startsWith('/') ? path : '/' + path;
+  return baseURL() + p;
+}
+
+async function webdavRequest(method, path, extraHeaders = {}, body = null) {
+  const url = davURL(path);
+  const headers = {
+    'Authorization': authHeader(),
+    'User-Agent': 'FRITZConnect-PWA/1.0',
+    ...extraHeaders
+  };
+  if (body) headers['Content-Length'] = body.byteLength ?? body.length;
+
+  const resp = await fetch(url, { method, headers, body, credentials: 'omit' });
+
+  if (resp.status === 401 || resp.status === 403) throw new Error('401 Unauthorized');
+  if (resp.status === 404) throw new Error('404 Not Found');
+  if (resp.status === 405) throw new Error('405 Already Exists');
+  if (resp.status === 409) throw new Error('409 Conflict');
+  if (!resp.ok && resp.status !== 207) throw new Error(resp.status + ' ' + resp.statusText);
+
+  return resp;
+}
+
+// PROPFIND → Ordnerinhalt auflesen
+async function webdavList(path) {
+  const body = `<?xml version="1.0" encoding="utf-8"?>
+<D:propfind xmlns:D="DAV:">
+  <D:prop><D:displayname/><D:getcontentlength/><D:getcontenttype/><D:getlastmodified/><D:resourcetype/></D:prop>
+</D:propfind>`;
+
+  const resp = await webdavRequest('PROPFIND', path.endsWith('/') ? path : path + '/', {
+    'Depth': '1',
+    'Content-Type': 'application/xml; charset=utf-8'
+  }, body);
+
+  const xml = await resp.text();
+  return parseWebDAVResponse(xml, path);
+}
+
+// MKCOL → Ordner erstellen
+async function webdavMkDir(path) {
+  await webdavRequest('MKCOL', path.endsWith('/') ? path : path + '/');
+}
+
+// MOVE → Verschieben / Umbenennen
+async function webdavMove(fromPath, toPath) {
+  const dest = davURL(toPath);
+  await webdavRequest('MOVE', fromPath, {
+    'Destination': dest,
+    'Overwrite': 'F'
+  });
+}
+
+// DELETE → Löschen
+async function webdavDelete(path) {
+  await webdavRequest('DELETE', path);
+}
+
+// GET → Datei herunterladen
+async function webdavGet(path) {
+  const resp = await webdavRequest('GET', path);
+  return resp.blob();
+}
+
+// PUT → Datei hochladen
+async function webdavPut(path, data, mime = 'application/octet-stream') {
+  await webdavRequest('PUT', path, { 'Content-Type': mime }, data);
+}
+
+// ════════════════════════════════════════════════
+// XML PARSER (WebDAV PROPFIND response)
+// ════════════════════════════════════════════════
+function parseWebDAVResponse(xml, basePath) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  const responses = doc.querySelectorAll('response');
+  const base = davURL(basePath.endsWith('/') ? basePath : basePath + '/');
+  const items = [];
+
+  responses.forEach(r => {
+    const href = r.querySelector('href')?.textContent || '';
+    // Den aktuellen Ordner selbst überspringen
+    const decodedHref = decodeURIComponent(href);
+    const decodedBase = decodeURIComponent(new URL(base).pathname);
+    if (decodedHref.replace(/\/$/, '') === decodedBase.replace(/\/$/, '')) return;
+
+    const isFolder = !!r.querySelector('resourcetype collection');
+    const name = decodeURIComponent(href.split('/').filter(Boolean).pop() || '');
+    const size = parseInt(r.querySelector('getcontentlength')?.textContent || '0');
+    const modified = r.querySelector('getlastmodified')?.textContent || '';
+    const mime = r.querySelector('getcontenttype')?.textContent || '';
+
+    // Pfad rekonstruieren
+    const nasBase = new URL(base).pathname.replace('/nas', '');
+    const itemPath = decodeURIComponent(new URL(href, base).pathname).replace('/nas', '');
+
+    items.push({ name, path: itemPath, isFolder, size, modified: modified ? new Date(modified) : null, mime });
+  });
+
+  return items;
+}
+
+// ════════════════════════════════════════════════
+// FILE TYPE HELPERS
+// ════════════════════════════════════════════════
+function ext(name) { return (name.split('.').pop() || '').toLowerCase(); }
+function isImage(name) { return ['jpg','jpeg','png','heic','heif','gif','webp','bmp'].includes(ext(name)); }
+function isVideo(name) { return ['mp4','mov','m4v','avi','mkv','wmv'].includes(ext(name)); }
+function isPDF(name)   { return ext(name) === 'pdf'; }
+function isDoc(name)   { return ['doc','docx','xls','xlsx','ppt','pptx','txt','md'].includes(ext(name)); }
+
+function iconClass(item) {
+  if (item.isFolder) return 'i-folder';
+  if (isImage(item.name)) return 'i-img';
+  if (isVideo(item.name)) return 'i-vid';
+  if (isPDF(item.name)) return 'i-pdf';
+  if (isDoc(item.name)) return 'i-doc';
+  return 'i-file';
+}
+
+function iconName(item) {
+  if (item.isFolder) return 'ti-folder-filled';
+  if (isImage(item.name)) return 'ti-photo';
+  if (isVideo(item.name)) return 'ti-video';
+  if (isPDF(item.name)) return 'ti-file-type-pdf';
+  if (isDoc(item.name)) return 'ti-file-text';
+  return 'ti-file';
+}
+
+function fmtSize(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  if (bytes < 1024*1024*1024) return (bytes/1024/1024).toFixed(1) + ' MB';
+  return (bytes/1024/1024/1024).toFixed(2) + ' GB';
+}
+
+function fmtDate(d) {
+  if (!d) return '';
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 86400) return 'Heute';
+  if (diff < 172800) return 'Gestern';
+  return d.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' });
+}
+
+// ════════════════════════════════════════════════
+// LOAD & RENDER DIRECTORY
+// ════════════════════════════════════════════════
+async function loadDir() {
+  const path = '/' + navPath.join('/');
+  const list = document.getElementById('fileList');
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--gray-3)"><i class="ti ti-loader-2" style="font-size:32px;animation:spin 1s linear infinite;display:block;margin:0 auto 8px"></i>Lade...</div>';
+
+  try {
+    allItems = await webdavList(path);
+    renderDir();
+  } catch(e) {
+    list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--gray-3)"><i class="ti ti-wifi-off" style="font-size:32px;display:block;margin:0 auto 8px"></i>${friendlyError(e)}<br><br><button onclick="loadDir()" style="color:var(--blue);background:none;border:none;font-size:14px;cursor:pointer;font-family:var(--font)">Erneut versuchen</button></div>`;
+  }
+
+  updateBreadcrumb();
+  document.getElementById('navTitle').textContent = navPath.length ? navPath[navPath.length-1] : 'FRITZ!NAS';
+  document.getElementById('folderModalLoc').textContent = navPath.length ? navPath[navPath.length-1] : 'FRITZ!NAS';
+}
+
+function renderDir() {
+  const list = document.getElementById('fileList');
+  let items = [...allItems];
+
+  if (currentPill === 'photos') items = items.filter(i => !i.isFolder && (isImage(i.name) || isVideo(i.name)));
+  else if (currentPill === 'docs') items = items.filter(i => !i.isFolder && (isPDF(i.name) || isDoc(i.name)));
+  else if (currentPill === 'other') items = items.filter(i => !i.isFolder && !isImage(i.name) && !isVideo(i.name) && !isPDF(i.name) && !isDoc(i.name));
+
+  const folders = items.filter(i => i.isFolder);
+  const files   = items.filter(i => !i.isFolder);
+
+  if (currentPill === 'photos' && files.length > 0) {
+    list.innerHTML = renderPhotoGrid(files);
+    lazyLoadGrid();
+    return;
+  }
+
+  let html = '';
+
+  if (folders.length) {
+    html += '<div class="sec">Ordner</div><div class="group">';
+    folders.forEach(item => { html += renderRow(item); });
+    html += '</div>';
+  }
+
+  if (files.length) {
+    html += '<div class="sec">Dateien</div><div class="group">';
+    files.forEach(item => { html += renderRow(item); });
+    html += '</div>';
+  }
+
+  if (!folders.length && !files.length) {
+    html = '<div style="text-align:center;padding:48px 20px;color:var(--gray-3)"><i class="ti ti-folder-open" style="font-size:40px;display:block;margin:0 auto 10px"></i>Ordner ist leer</div>';
+  }
+
+  list.innerHTML = html;
+  lazyLoadThumbs();
+}
+
+function renderRow(item) {
+  const sel = selected.has(item.path);
+  const meta = [fmtSize(item.size), fmtDate(item.modified)].filter(Boolean).join(' · ');
+  const isImg = isImage(item.name);
+
+  let left = '';
+  if (editMode) {
+    left = `<div class="chk${sel?' on':''}"><i class="ti ti-check" style="font-size:13px"></i></div>`;
+  }
+
+  let icon = '';
+  if (isImg && !editMode) {
+    icon = `<img class="row-thumb" data-src="${davURL(item.path)}" alt="${item.name}" onerror="this.style.display='none'"/>`;
+  } else {
+    icon = `<div class="icon ${iconClass(item)}"><i class="ti ${iconName(item)}"></i></div>`;
+  }
+
+  let right = '';
+  if (!editMode) {
+    if (item.isFolder) right = '<i class="ti ti-chevron-right row-chev"></i>';
+    else right = `<button class="nav-btn" style="color:var(--gray-2)" onclick="event.stopPropagation();openCtx('${encodeURIComponent(JSON.stringify(item))}')"><i class="ti ti-dots-vertical"></i></button>`;
+  }
+
+  return `<div class="row${sel?' selected':''}" onclick="rowClick('${encodeURIComponent(JSON.stringify(item))}')" oncontextmenu="rowLongPress(event,'${encodeURIComponent(JSON.stringify(item))}')">
+    ${left}${icon}
+    <div class="row-info">
+      <div class="row-name">${item.name}</div>
+      ${meta ? `<div class="row-meta">${meta}</div>` : ''}
+    </div>
+    ${right}
+  </div>`;
+}
+
+function renderPhotoGrid(files) {
+  let html = '<div class="photo-grid" style="padding:0 0 80px">';
+  files.forEach(item => {
+    html += `<div class="photo-cell" onclick="openViewer('${encodeURIComponent(JSON.stringify(item))}')">
+      <div class="shimmer"></div>
+      <img data-src="${davURL(item.path)}" alt="${item.name}" style="opacity:0" onerror="this.parentNode.querySelector('.shimmer').style.display='none'"/>
+      ${isVideo(item.name) ? '<div class="vid-badge"><i class="ti ti-player-play" style="font-size:8px"></i> Video</div>' : ''}
+    </div>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function lazyLoadThumbs() {
+  document.querySelectorAll('img[data-src]').forEach(img => {
+    const src = img.getAttribute('data-src');
+    img.src = src;
+    img.onload = () => { img.style.opacity = '1'; img.style.transition = 'opacity 0.3s'; };
+  });
+}
+
+function lazyLoadGrid() {
+  const imgs = document.querySelectorAll('.photo-cell img[data-src]');
+  imgs.forEach((img, i) => {
+    setTimeout(() => {
+      const src = img.getAttribute('data-src');
+      img.src = src;
+      img.onload = () => {
+        img.style.opacity = '1';
+        img.style.transition = 'opacity 0.4s';
+        img.previousElementSibling?.remove(); // shimmer entfernen
+      };
+    }, i * 80);
+  });
+}
+
+// ════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════
+function rowClick(encoded) {
+  const item = JSON.parse(decodeURIComponent(encoded));
+  if (editMode) {
+    toggleSelect(item);
+    return;
+  }
+  if (item.isFolder) {
+    navPath.push(item.name);
+    loadDir();
+  } else if (isImage(item.name) || isVideo(item.name)) {
+    openViewer(encoded);
+  } else {
+    openCtx(encoded);
+  }
+}
+
+function rowLongPress(e, encoded) {
+  e.preventDefault();
+  const item = JSON.parse(decodeURIComponent(encoded));
+  if (!editMode) { startEdit(); }
+  toggleSelect(item);
+}
+
+function updateBreadcrumb() {
+  const bc = document.getElementById('breadcrumb');
+  let html = `<span class="crumb-item${navPath.length===0?' cur':''}" onclick="goRoot()">FRITZ!NAS</span>`;
+  navPath.forEach((seg, i) => {
+    html += `<span class="crumb-sep"><i class="ti ti-chevron-right" style="font-size:11px"></i></span>`;
+    const isCur = i === navPath.length - 1;
+    html += `<span class="crumb-item${isCur?' cur':''}" onclick="goToLevel(${i+1})">${seg}</span>`;
+  });
+  bc.innerHTML = html;
+}
+
+function goRoot() { navPath = []; cancelEdit(); loadDir(); }
+function goToLevel(n) { navPath = navPath.slice(0, n); cancelEdit(); loadDir(); }
+
+function currentPathStr() { return '/' + navPath.join('/'); }
+
+// ════════════════════════════════════════════════
+// EDIT MODE
+// ════════════════════════════════════════════════
+function startEdit() {
+  editMode = true; selected.clear();
+  document.getElementById('navNormal').style.display = 'none';
+  document.getElementById('navEdit').style.display = 'flex';
+  document.getElementById('tabbarMain').style.display = 'none';
+  document.getElementById('editActions').style.display = 'flex';
+  document.getElementById('fileList').style.paddingBottom = '120px';
+  updateEditCount();
+  renderDir();
+}
+
+function cancelEdit() {
+  editMode = false; selected.clear();
+  document.getElementById('navNormal').style.display = 'flex';
+  document.getElementById('navEdit').style.display = 'none';
+  document.getElementById('tabbarMain').style.display = 'flex';
+  document.getElementById('editActions').style.display = 'none';
+  document.getElementById('fileList').style.paddingBottom = '';
+  renderDir();
+}
+
+function toggleSelect(item) {
+  if (selected.has(item.path)) selected.delete(item.path);
+  else selected.add(item.path);
+  updateEditCount();
+  renderDir();
+}
+
+function updateEditCount() {
+  const n = selected.size;
+  document.getElementById('editCount').textContent =
+    n === 0 ? '0 ausgewählt' : n + (n===1?' Eintrag':' Einträge') + ' ausgewählt';
+}
+
+function selectAll() {
+  allItems.forEach(i => selected.add(i.path));
+  updateEditCount(); renderDir();
+}
+
+// ════════════════════════════════════════════════
+// NEW FOLDER
+// ════════════════════════════════════════════════
+function openNewFolderModal() {
+  document.getElementById('folderNameInput').value = '';
+  openModal('folderModal');
+  setTimeout(() => document.getElementById('folderNameInput').focus(), 300);
+}
+
+async function createFolder() {
+  const name = document.getElementById('folderNameInput').value.trim();
+  if (!name) { toast('Bitte einen Namen eingeben'); return; }
+  const path = currentPathStr() + '/' + name;
+  closeModal('folderModal');
+  try {
+    await webdavMkDir(path);
+    toast(`Ordner "${name}" erstellt ✓`);
+    await loadDir();
+  } catch(e) {
+    if (e.message.includes('405')) toast('Dieser Name ist bereits vergeben.');
+    else toast('Fehler: ' + e.message);
+  }
+}
+
+// ════════════════════════════════════════════════
+// RENAME
+// ════════════════════════════════════════════════
+function openCtx(encoded) {
+  ctxItem = JSON.parse(decodeURIComponent(encoded));
+  document.getElementById('ctxLabel').textContent = ctxItem.name;
+  openSheet('ctxSheet');
+}
+function openItemSheet(item) { if (item) openCtx(encodeURIComponent(JSON.stringify(item))); }
+
+function doRename() { closeSheet('ctxSheet'); renamePrompt(); }
+
+function renamePrompt() {
+  const target = ctxItem || (selected.size === 1 ? allItems.find(i => selected.has(i.path)) : null);
+  if (!target) { toast('Bitte genau eine Datei auswählen'); return; }
+  ctxItem = target;
+  document.getElementById('renameInput').value = target.name;
+  openModal('renameModal');
+  setTimeout(() => { const el = document.getElementById('renameInput'); el.focus(); el.select(); }, 300);
+}
+
+async function confirmRename() {
+  const newName = document.getElementById('renameInput').value.trim();
+  if (!newName || newName === ctxItem.name) { closeModal('renameModal'); return; }
+  const fromPath = ctxItem.path;
+  const toPath = fromPath.replace(/[^/]+$/, '') + newName;
+  closeModal('renameModal');
+  try {
+    await webdavMove(fromPath, toPath);
+    toast(`Umbenannt zu "${newName}" ✓`);
+    await loadDir();
+    if (editMode) cancelEdit();
+  } catch(e) {
+    toast('Umbenennen fehlgeschlagen: ' + e.message);
+  }
+}
+
+// ════════════════════════════════════════════════
+// MOVE
+// ════════════════════════════════════════════════
+function doMoveSingle() { closeSheet('ctxSheet'); moveTargets = [ctxItem]; openMovePicker(); }
+
+function moveSelected() {
+  if (selected.size === 0) { toast('Nichts ausgewählt'); return; }
+  moveTargets = allItems.filter(i => selected.has(i.path));
+  openMovePicker();
+}
+
+function openMovePicker() {
+  moveDest = null;
+  const n = moveTargets.length;
+  document.getElementById('moveSub').textContent = n === 1 ? `"${moveTargets[0].name}" verschieben` : `${n} Einträge verschieben`;
+  buildMoveList();
+  openModal('moveModal');
+}
+
+function buildMoveList() {
+  const moveTargetPaths = new Set(moveTargets.map(i => i.path));
+  const folders = allItems.filter(i => i.isFolder && !moveTargetPaths.has(i.path));
+  const list = document.getElementById('moveList');
+  let html = '';
+
+  if (navPath.length > 0) {
+    const up = navPath.length > 1 ? navPath[navPath.length-2] : 'FRITZ!NAS';
+    html += `<div class="move-item${moveDest==='__up__'?' sel':''}" onclick="selectMoveDest('__up__')">
+      <i class="ti ti-arrow-up" style="color:var(--blue);font-size:22px"></i>
+      <span>↑ ${up}</span>
+      ${moveDest==='__up__'?'<i class="ti ti-check chk-icon"></i>':''}
+    </div>`;
+  }
+
+  if (!folders.length && navPath.length === 0) {
+    html += '<div style="padding:20px;text-align:center;color:var(--gray-3);font-size:14px">Keine anderen Ordner vorhanden.<br>Erstelle zuerst einen neuen Ordner.</div>';
+  }
+
+  folders.forEach(f => {
+    const sel = moveDest === f.name;
+    html += `<div class="move-item${sel?' sel':''}" onclick="selectMoveDest('${f.name}')">
+      <i class="ti ti-folder-filled"></i>
+      <span>${f.name}</span>
+      ${sel ? '<i class="ti ti-check chk-icon"></i>' : ''}
+    </div>`;
+  });
+
+  list.innerHTML = html;
+}
+
+function selectMoveDest(name) { moveDest = name; buildMoveList(); }
+
+async function confirmMove() {
+  if (!moveDest) { toast('Bitte Zielordner wählen'); return; }
+  closeModal('moveModal');
+
+  let destBase;
+  if (moveDest === '__up__') {
+    destBase = '/' + navPath.slice(0, -1).join('/');
+  } else {
+    destBase = currentPathStr() + '/' + moveDest;
+  }
+
+  let errors = 0;
+  for (const item of moveTargets) {
+    const toPath = destBase + '/' + item.name;
+    try { await webdavMove(item.path, toPath); }
+    catch(e) { errors++; }
+  }
+
+  const destName = moveDest === '__up__' ? (navPath.length > 1 ? navPath[navPath.length-2] : 'FRITZ!NAS') : moveDest;
+  if (errors === 0) toast(`${moveTargets.length === 1 ? '"'+moveTargets[0].name+'"' : moveTargets.length + ' Einträge'} → ${destName} ✓`);
+  else toast(`${errors} Fehler beim Verschieben`);
+
+  if (editMode) cancelEdit(); else await loadDir();
+}
+
+// ════════════════════════════════════════════════
+// DELETE
+// ════════════════════════════════════════════════
+function doDeleteSingle() {
+  closeSheet('ctxSheet');
+  if (!ctxItem) return;
+  if (!confirm(`"${ctxItem.name}" wirklich löschen?`)) return;
+  webdavDelete(ctxItem.path)
+    .then(() => { toast(`"${ctxItem.name}" gelöscht`); loadDir(); })
+    .catch(e => toast('Löschen fehlgeschlagen: ' + e.message));
+}
+
+async function deleteSelected() {
+  if (selected.size === 0) { toast('Nichts ausgewählt'); return; }
+  const n = selected.size;
+  if (!confirm(`${n} ${n===1?'Eintrag':'Einträge'} wirklich löschen?`)) return;
+  const targets = allItems.filter(i => selected.has(i.path));
+  cancelEdit();
+  let errors = 0;
+  for (const item of targets) {
+    try { await webdavDelete(item.path); }
+    catch(e) { errors++; }
+  }
+  if (errors === 0) toast(`${n} ${n===1?'Eintrag':'Einträge'} gelöscht`);
+  else toast(`${errors} Fehler beim Löschen`);
+  await loadDir();
+}
+
+// ════════════════════════════════════════════════
+// DOWNLOAD & SHARE
+// ════════════════════════════════════════════════
+async function doDownload() {
+  closeSheet('ctxSheet');
+  if (!ctxItem) return;
+  downloadItem(ctxItem);
+}
+
+async function downloadItem(item) {
+  if (!item) return;
+  try {
+    toast('Lade herunter...');
+    const blob = await webdavGet(item.path);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = item.name; a.click();
+    URL.revokeObjectURL(url);
+    toast(`"${item.name}" heruntergeladen ✓`);
+  } catch(e) { toast('Download fehlgeschlagen: ' + e.message); }
+}
+
+function doShare() { closeSheet('ctxSheet'); shareItem(ctxItem); }
+
+async function shareItem(item) {
+  if (!item) return;
+  try {
+    const blob = await webdavGet(item.path);
+    const file = new File([blob], item.name, { type: blob.type });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: item.name });
+    } else {
+      downloadItem(item);
+    }
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('Teilen fehlgeschlagen: ' + e.message);
+  }
+}
+
+function copySelected() { toast('Kopieren folgt in v1.2'); }
+
+// ════════════════════════════════════════════════
+// UPLOAD
+// ════════════════════════════════════════════════
+function triggerUpload() { document.getElementById('fileInput').click(); }
+
+async function handleFileSelect(e) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+  e.target.value = '';
+
+  for (const file of files) {
+    const destPath = currentPathStr() + '/' + file.name;
+    document.getElementById('uploadName').textContent = file.name;
+    document.getElementById('uploadLabel').textContent = 'Vorbereiten...';
+    document.getElementById('progFill').style.width = '0%';
+    openModal('uploadModal');
+
+    // Fortschritt simulieren (echter XHR-Progress erfordert XMLHttpRequest)
+    let prog = 0;
+    const iv = setInterval(() => {
+      prog = Math.min(prog + Math.random() * 15 + 5, 90);
+      document.getElementById('progFill').style.width = prog + '%';
+      document.getElementById('uploadLabel').textContent = Math.round(prog) + '%';
+    }, 200);
+
+    try {
+      const buf = await file.arrayBuffer();
+      await webdavPut(destPath, buf, file.type || 'application/octet-stream');
+      clearInterval(iv);
+      document.getElementById('progFill').style.width = '100%';
+      document.getElementById('uploadLabel').textContent = 'Fertig ✓';
+      await new Promise(r => setTimeout(r, 600));
+      closeModal('uploadModal');
+      toast(`"${file.name}" hochgeladen ✓`);
+      await loadDir();
+    } catch(err) {
+      clearInterval(iv);
+      closeModal('uploadModal');
+      toast('Upload fehlgeschlagen: ' + err.message);
+    }
+  }
+}
+
+// ════════════════════════════════════════════════
+// IMAGE VIEWER
+// ════════════════════════════════════════════════
+function openViewer(encoded) {
+  const item = JSON.parse(decodeURIComponent(encoded));
+  viewerItem = item;
+  document.getElementById('viewerTitle').textContent = item.name.length > 20 ? item.name.substring(0,18)+'…' : item.name;
+  document.getElementById('viewerName').textContent = item.name;
+  document.getElementById('viewerMeta').textContent = [fmtSize(item.size), fmtDate(item.modified)].filter(Boolean).join(' · ');
+
+  const img = document.getElementById('viewerImg');
+  const bar = document.getElementById('viewLoadBar');
+  img.style.opacity = '0'; bar.style.width = '0%';
+
+  let prog = 0;
+  const iv = setInterval(() => {
+    prog = Math.min(prog + Math.random()*20+8, 92);
+    bar.style.width = prog + '%';
+  }, 180);
+
+  img.onload = () => { clearInterval(iv); bar.style.width = '100%'; img.style.opacity='1'; img.style.transition='opacity 0.4s'; };
+  img.src = davURL(item.path) + '?auth=' + btoa(creds.user+':'+creds.pass);
+  // Hinweis: Bilder werden mit Auth-Token als Query-Parameter geladen (Fallback für Browser-IMG-Tags)
+
+  showScreen('viewerScreen');
+}
+
+function closeViewer() { showScreen('filesScreen'); viewerItem = null; }
+
+// ════════════════════════════════════════════════
+// PILL TABS
+// ════════════════════════════════════════════════
+function switchPill(btn, id) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('on'));
+  btn.classList.add('on');
+  currentPill = id;
+  renderDir();
+}
+
+// ════════════════════════════════════════════════
+// TAB BAR
+// ════════════════════════════════════════════════
+function tabClick(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  btn.classList.add('on');
+  if (tab === 'files') { /* already here */ }
+  else if (tab === 'info') showNASInfo();
+  else if (tab === 'settings') showSettings();
+  else if (tab === 'recents') loadRecents();
+}
+
+function showNASInfo() {
+  toast(`FRITZ!Box: ${creds.host}`);
+}
+
+function showSettings() {
+  if (confirm('Abmelden?')) {
+    clearCreds();
+    showScreen('loginScreen');
+  }
+}
+
+async function loadRecents() {
+  toast('Zuletzt bearbeitet wird geladen...');
+}
+
+// ════════════════════════════════════════════════
+// UI HELPERS
+// ════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function openSheet(id) { document.getElementById(id).classList.add('open'); }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+loadCreds();
+if (creds) {
+  document.getElementById('inHost').value = creds.host;
+  document.getElementById('inUser').value = creds.user;
+  // Passwort aus Sicherheitsgründen nicht vorauffüllen
+  document.getElementById('connTxt').textContent = creds.host + ' · HTTPS';
+  showScreen('filesScreen');
+  loadDir();
+}
+
+// CSS spinner animation
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
